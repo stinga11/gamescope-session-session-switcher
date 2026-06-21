@@ -167,9 +167,17 @@ int main(int argc, char *argv[]) {
         safe_exec(cmd1);
 
         if (kde_logout(user_bus) < 0) {
-            char *fallback[] = {"qdbus-qt6", "org.kde.Shutdown",
-                                 "/Shutdown", "org.kde.Shutdown.logout", NULL};
-            safe_exec(fallback);
+            /* qdbus6 es el binario en Arch/CachyOS; qdbus-qt6 es el
+               equivalente en Fedora. Se intenta primero el de Arch
+               (donde se valido este binario) y se cae al de Fedora
+               por si el binario se usa en esa distro. */
+            char *fallback_arch[] = {"qdbus6", "org.kde.Shutdown",
+                                      "/Shutdown", "org.kde.Shutdown.logout", NULL};
+            if (safe_exec(fallback_arch) != 0) {
+                char *fallback_fedora[] = {"qdbus-qt6", "org.kde.Shutdown",
+                                            "/Shutdown", "org.kde.Shutdown.logout", NULL};
+                safe_exec(fallback_fedora);
+            }
         }
 
         wait_for_session_end(session_id);
